@@ -7,6 +7,7 @@ import time
 
 
 
+
 # --- Configurações Iniciais ---
 np.set_printoptions(suppress=True)
 st.set_page_config(layout="wide") 
@@ -35,9 +36,6 @@ chart_placeholder = st.empty()
 
 camera = cv2.VideoCapture(0, cv2.CAP_DSHOW if cv2.CAP_DSHOW in locals() else 0)
 
-if not camera.isOpened():
-    st.error("Erro: Não foi possível abrir a câmera. Tente outro índice (ex: cv2.VideoCapture(1)).")
-    st.stop()
 
 
 
@@ -45,27 +43,27 @@ if not camera.isOpened():
 try:
     while True:
 
-        # 1. CAPTURA
+        # 1. tira a foto
         ret, image = camera.read()
         time.sleep(0.5)
 
-        # 2. PRÉ-PROCESSAMENTO (Conforme o seu código)
+        # 2. pre processamento roubado do cam.py
         resized_image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
         model_input_image = np.asarray(resized_image, dtype=np.float32).reshape(1, 224, 224, 3)
         model_input_image = (model_input_image / 127.5) - 1
 
-        # 3. PREDIÇÃO
+        # 3.roubado do cam.py sla o que faz mas se tirar explode =/
         prediction = model.predict(model_input_image, verbose=0)
         
-        # O array de predições é o que usaremos para o gráfico
+        # O array do gráfico
         scores = prediction[0]
         index = np.argmax(scores)
         class_name = clean_class_names[index]
         confidence_score = scores[index]
 
-        # 4. ATUALIZAÇÃO DO STREAMLIT (Gráfico)
+        # 4. atualiza Gráfico em si
         
-        # Crie o DataFrame de comparação de Confiança
+        # Crie o DataFrame de comparação de chances
         data_to_plot = pd.DataFrame({
             'Classe': clean_class_names, 
             'Confiança (%)': scores * 100
@@ -89,8 +87,8 @@ try:
             f"""
             ### Resultado da Classificação
             ---
-            **Classe Predita:** <span style='font-size: 24px; color: green;'>**{class_name}**</span>
-            **Confiança:** **{confidence_score * 100:.2f}%**
+            **o terreno está ** <span style='font-size: 24px; color: green;'>**{class_name}**</span>
+            **Chance:** **{confidence_score * 100:.2f}%**
             """, unsafe_allow_html=True
         )
 
