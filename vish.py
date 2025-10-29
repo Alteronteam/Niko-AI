@@ -8,7 +8,7 @@ import time
 
 
 
-# --- Configurações Iniciais ---
+#coisas do streamlit 
 np.set_printoptions(suppress=True)
 st.set_page_config(layout="wide") 
 
@@ -21,8 +21,8 @@ except Exception as e:
     st.error(f"Erro ao carregar modelo ou rótulos: {e}. Verifique se os arquivos 'keras_Model.h5' e 'labels.txt' estão presentes.")
     st.stop() # Para o script se houver erro vai que
 
-# --- Streamlit UI ---
-st.title("quiemador de gpu")
+#titulo
+st.title("IA para identificar queimadas em pastos")
 
 # Cria colunas para a organização
 col1, col2 = st.columns([1, 1])
