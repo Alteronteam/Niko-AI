@@ -45,7 +45,7 @@ try:
 
         # 1. tira a foto
         ret, image = camera.read()
-        time.sleep(0.5)
+        #time.sleep(0.5)
 
         # 2. pre processamento roubado do cam.py
         resized_image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
@@ -87,10 +87,12 @@ try:
             f"""
             ### Resultado da Classificação
             ---
-            **o terreno está ** <span style='font-size: 24px; color: green;'>**{class_name}**</span>
+            o terreno está  <span style='font-size: 24px; color: green;'>**{class_name}**</span>
             **Chance:** **{confidence_score * 100:.2f}%**
             """, unsafe_allow_html=True
+            
         )
+    
 
         
 
