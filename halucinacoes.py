@@ -1,47 +1,102 @@
+from keras.models import load_model
+import cv2  
+import numpy as np
 import streamlit as st
 import pandas as pd
 import time
-import numpy as np # Usado apenas para simular a leitura do sensor
 
-st.title("૮ ˶ᵔ ᵕ ᵔ˶ ა")
 
-# Cria um placeholder vazio onde o gráfico será atualizado, tipo onde ele vai caber pq é meio coisas
+
+
+#coisas do streamlit 
+np.set_printoptions(suppress=True)
+st.set_page_config(layout="wide") 
+
+
+try:
+    model = load_model("keras_Model.h5", compile=False)
+    class_names = open("labels.txt", "r").readlines()
+    clean_class_names = [name[2:].strip() for name in class_names]
+except Exception as e:
+    st.error(f"Erro ao carregar modelo ou rótulos: {e}. Verifique se os arquivos 'keras_Model.h5' e 'labels.txt' estão presentes.")
+    st.stop() # Para o script se houver erro vai que
+
+#titulo
+st.title("IA para identificar problemas em pastos")
+
+# Cria colunas para a organização
+col1, col2 = st.columns([1, 1])
+image_placeholder = col1.empty() # Para a imagem processada (Webcam)
+text_placeholder = col2.empty() # Para o texto de predição
+
+
 chart_placeholder = st.empty()
 
 
-# Definimos o número total de iterações para a demonstração
-MAX_ITERATIONS = 50 
 
-for i in range(1, MAX_ITERATIONS + 1):
-    
-  
-    foguinho = np.random.uniform(5.0, 30.0) 
-    prantinha = np.random.uniform(5.0, 30.0) 
-   
+camera = cv2.VideoCapture(0, cv2.CAP_DSHOW if cv2.CAP_DSHOW in locals() else 0)
 
-    
-    data_to_plot = pd.DataFrame({
-        'Categoria': ['prantinha', 'ˆ𐃷ˆ'], 
-        'Valor Atual': [foguinho, prantinha] 
-    })
-    
-    # B. Atualiza o placeholder com o novo gráfico e informações
-    with chart_placeholder:
-        # Exibe os valores atuais
-        st.markdown(
-            f"**Atualização {i}** | **area devastada** `{foguinho:.2f}` | **area coberta** `{prantinha:.2f}`"
-        )
+
+
+
+
+try:
+    while True:
+
+        # 1. tira a foto
+        ret, image = camera.read()
+        #time.sleep(0.5)
+
+        # 2. pre processamento roubado do cam.py
+        resized_image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
+        model_input_image = np.asarray(resized_image, dtype=np.float32).reshape(1, 224, 224, 3)
+        model_input_image = (model_input_image / 127.5) - 1
+
+        # 3.roubado do cam.py sla o que dfaz mas se tirar explode =/
+        prediction = model.predict(model_input_image, verbose=0)
         
-        # O bar_chart utiliza as colunas 'Categoria' (eixo X) e 'Valor Atual' (eixo Y)
-        # O gráfico será redesenhado do zero a cada iteração
-        st.bar_chart(
-            data_to_plot,
-            x='Categoria',
-            y='Valor Atual',
-            use_container_width=True
-        )
-        
-    # Espera 1 segundo (ajuste conforme a frequência de atualização desejada)
-    time.sleep(1)
+        # O array do gráfico
+        scores = prediction[0]
+        index = np.argmax(scores)
+        class_name = clean_class_names[index]
+        confidence_score = scores[index]
 
-st.success("vacas exterminadoras premium para mais tempo")
+        # 4. atualiza Gráfico em si
+        
+        # Crie o DataFrame de comparação de chances
+        data_to_plot = pd.DataFrame({
+            'Classe': clean_class_names, 
+            'Confiança (%)': scores * 100
+        }).sort_values(by='Confiança (%)', ascending=False)
+        
+        with chart_placeholder:
+            st.subheader("Confiança de Todas as Classes")
+            st.bar_chart(
+                data_to_plot,
+                x='Classe',
+                y='Confiança (%)',
+                use_container_width=True
+            )
+
+        
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        image_placeholder.image(rgb_image, caption="Câmera em Tempo Real", use_container_width='always')
+        
+        text_placeholder.markdown(
+            f"""
+            ### Resultado da Classificação
+            ---
+            o terreno está  <span style='font-size: 24px; color: green;'>**{class_name}**</span>
+            **Chance:** **{confidence_score * 100:.2f}%**
+            """, unsafe_allow_html=True
+            
+        )
+    
+
+        
+
+
+finally:
+    camera.release()
+    cv2.destroyAllWindows()

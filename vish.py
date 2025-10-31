@@ -52,7 +52,7 @@ try:
         model_input_image = np.asarray(resized_image, dtype=np.float32).reshape(1, 224, 224, 3)
         model_input_image = (model_input_image / 127.5) - 1
 
-        # 3.roubado do cam.py sla o que faz mas se tirar explode =/
+        # 3.roubado do cam.py sla o que dfaz mas se tirar explode =/
         prediction = model.predict(model_input_image, verbose=0)
         
         # O array do gráfico

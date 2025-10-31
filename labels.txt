@@ -1,2 +1,2 @@
-0 foguinho
-1 prantinha
+0 bem_manejado
+1 mal_manejado
